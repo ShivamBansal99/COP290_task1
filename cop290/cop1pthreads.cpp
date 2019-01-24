@@ -1,10 +1,13 @@
-#include <cblas.h>
 #include <bits/stdc++.h>
 #include <stdlib.h>
 using namespace std;
 #define loop(i,a) for(int i=0;i<a;++i)
 
-
+int RowSizeGlob,colSizeGlob,kerSizeGlob;
+float ** M1;
+float ** M2;
+float ** M3;
+int step_i = 0;
 void print(vector<vector<float> > matrix){
 	loop(i,matrix.size()){
 		loop(j,matrix[i].size()){
@@ -41,6 +44,16 @@ void convolution(vector<vector<float> > &matrix, vector<vector<float> > &kernel,
 	}
 	matrix=res ;
 }
+
+void* multi(void* arg) 
+{ 
+    int core = step_i++; 
+  
+    // Each thread computes 1/4th of matrix multiplication 
+    for (int i = core * RowSizeGlob / 3; i < (core + 1) * RowSizeGlob / 3; i++)  
+            for (int k = 0; k < colSizeGlob; k++)  
+                M3[i][0] += M1[i][k] * M2[k][0]; 
+} 
 
 void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &kernel,int padding){
 	//print(matrix) ;
@@ -81,35 +94,46 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 			bigi++ ;
 		}
 	}
+	RowSizeGlob= (test.size()-kernel.size()+1)*(test.size()-kernel.size()+1);
+	colSizeGlob= kernel.size()*kernel.size();
+	kerSizeGlob= kernel.size()*kernel.size();
 	//loop(i,kernel.size()*kernel.size()) cout<<temp2[i]<<" ";cout<<endl ; 
-	bigi=0 ;
-	float alpha = (float)1.0; float beta = (float) 0.0;
-	float* A = (float *)malloc((test.size()-kernel.size()+1)*(test.size()-kernel.size()+1)*kernel.size()*kernel.size() * sizeof(float));
-	float* B = (float *)malloc(kernel.size()*kernel.size() * sizeof(float));
-	float* C = (float *)malloc((test.size() - kernel.size()+1)*(test.size() - kernel.size()+1)*1 * sizeof(float));
-	if(A==NULL || B==NULL || C==NULL){
-		printf("Cannot allocate memory");
-		return;
+	M1= (float**) malloc(sizeof(float)*RowSizeGlob);
+	loop(i,RowSizeGlob){
+		M1[i]= (float *) malloc(sizeof(float)*colSizeGlob);
 	}
-	loop(i, (test.size() - kernel.size()+1)*(test.size() - kernel.size()+1)) {
-		loop(j, kernel.size()*kernel.size()) {
-			A[kernel.size()*kernel.size()*i + j] = temp[i][j];
+	M2= (float**) malloc(sizeof(float)*colSizeGlob);
+	loop(i,colSizeGlob){
+		M2[i] =(float *) malloc(sizeof(float)*1);
+	}
+	M3= (float**) malloc(sizeof(float)*RowSizeGlob);
+	loop(i,RowSizeGlob){
+		M3[i] =(float *) malloc(sizeof(float)*1);
+	}
+	loop(i,kernel.size()*kernel.size()){
+		M2[i][0] = temp2[i];
+	}
+	loop(i,RowSizeGlob){
+		loop(j,colSizeGlob){
+			M1[i][j]=temp[i][j];
 		}
 	}
-	loop(i, kernel.size()*kernel.size()) {
-			B[i] = temp2[i];
+	bigi=0 ;
+	pthread_t threads[3];
+	for (int i = 0; i < 3; i++) { 
+        	int* p; 
+        	pthread_create(&threads[i], NULL, multi, (void*)(p)); 
+    	} 
+	for (int i = 0; i < 3; i++) { 
+        	pthread_join(threads[i], NULL);  
 	}
-	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-		(test.size() - kernel.size()+1)*(test.size() - kernel.size()+1), 1, kernel.size()*kernel.size(), alpha, A, kernel.size()*kernel.size(), B, 1, beta, C, 1);
-
 	loop(i,rootside){
 		loop(j,rootside){
-			res[i][j]=C[bigi];
+			res[i][j]=M3[bigi][0];
 			bigi++ ;
 		}
 	}
 	matrix = res ;
-	free(A);free(B);free(C);
 }
 
 void max_pool(vector<vector<float> > &matrix,int row, int col,int stride){

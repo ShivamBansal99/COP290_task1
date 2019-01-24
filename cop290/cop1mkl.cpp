@@ -84,10 +84,14 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 	//loop(i,kernel.size()*kernel.size()) cout<<temp2[i]<<" ";cout<<endl ; 
 	bigi=0 ;
 	float alpha = (float)1.0; float beta = (float) 0.0;
-	float* A = (float *)malloc((test.size()-kernel.size())*(test.size()-kernel.size())*kernel.size()*kernel.size() * sizeof(float));
+	float* A = (float *)malloc((test.size()-kernel.size()+1)*(test.size()-kernel.size()+1)*kernel.size()*kernel.size() * sizeof(float));
 	float* B = (float *)malloc(kernel.size()*kernel.size() * sizeof(float));
-	float* C = (float *)malloc((test.size() - kernel.size())*(test.size() - kernel.size())*1 * sizeof(float));
-	loop(i, (test.size() - kernel.size())*(test.size() - kernel.size())) {
+	float* C = (float *)malloc((test.size() - kernel.size()+1)*(test.size() - kernel.size()+1)*1 * sizeof(float));
+	if(A==NULL || B==NULL || C==NULL){
+		printf("Cannot allocate memory");
+		return;
+	}
+	loop(i, (test.size() - kernel.size()+1)*(test.size() - kernel.size()+1)) {
 		loop(j, kernel.size()*kernel.size()) {
 			A[kernel.size()*kernel.size()*i + j] = temp[i][j];
 		}
@@ -96,7 +100,7 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 			B[i] = temp2[i];
 	}
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
-		(test.size() - kernel.size())*(test.size() - kernel.size()), 1, kernel.size()*kernel.size(), alpha, A, kernel.size()*kernel.size(), B, 1, beta, C, 1);
+		(test.size() - kernel.size()+1)*(test.size() - kernel.size()+1), 1, kernel.size()*kernel.size(), alpha, A, kernel.size()*kernel.size(), B, 1, beta, C, 1);
 
 	loop(i,rootside){
 		loop(j,rootside){
@@ -105,6 +109,7 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 		}
 	}
 	matrix = res ;
+	free(A);free(B);free(C);
 }
 
 void max_pool(vector<vector<float> > &matrix,int row, int col,int stride){
