@@ -48,11 +48,10 @@ void convolution(vector<vector<float> > &matrix, vector<vector<float> > &kernel,
 void* multi(void* arg) 
 { 
     int core = step_i++; 
-  
+    M3[core][0]=0;
     // Each thread computes 1/4th of matrix multiplication 
-    for (int i = core * RowSizeGlob / 3; i < (core + 1) * RowSizeGlob / 3; i++)  
             for (int k = 0; k < colSizeGlob; k++)  
-                M3[i][0] += M1[i][k] * M2[k][0]; 
+                M3[core][0] += M1[core][k] * M2[k][0]; 
 } 
 
 void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &kernel,int padding){
@@ -98,15 +97,15 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 	colSizeGlob= kernel.size()*kernel.size();
 	kerSizeGlob= kernel.size()*kernel.size();
 	//loop(i,kernel.size()*kernel.size()) cout<<temp2[i]<<" ";cout<<endl ; 
-	M1= (float**) malloc(sizeof(float)*RowSizeGlob);
+	M1= (float**) malloc(sizeof(float*)*RowSizeGlob);
 	loop(i,RowSizeGlob){
 		M1[i]= (float *) malloc(sizeof(float)*colSizeGlob);
 	}
-	M2= (float**) malloc(sizeof(float)*colSizeGlob);
+	M2= (float**) malloc(sizeof(float*)*colSizeGlob);
 	loop(i,colSizeGlob){
 		M2[i] =(float *) malloc(sizeof(float)*1);
 	}
-	M3= (float**) malloc(sizeof(float)*RowSizeGlob);
+	M3= (float**) malloc(sizeof(float*)*RowSizeGlob);
 	loop(i,RowSizeGlob){
 		M3[i] =(float *) malloc(sizeof(float)*1);
 	}
@@ -119,12 +118,12 @@ void convolution_matrix(vector<vector<float> > &matrix, vector<vector<float> > &
 		}
 	}
 	bigi=0 ;
-	pthread_t threads[3];
-	for (int i = 0; i < 3; i++) { 
+	pthread_t threads[RowSizeGlob];
+	for (int i = 0; i < RowSizeGlob; i++) { 
         	int* p; 
         	pthread_create(&threads[i], NULL, multi, (void*)(p)); 
     	} 
-	for (int i = 0; i < 3; i++) { 
+	for (int i = 0; i < RowSizeGlob; i++) { 
         	pthread_join(threads[i], NULL);  
 	}
 	loop(i,rootside){
