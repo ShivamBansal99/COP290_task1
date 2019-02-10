@@ -653,19 +653,25 @@ cout<<matrix.size();
 	vector<vector<vector<float> > > conv1out(12,vector<vector<float> >(12,vector <float>(20))) ;
 	loop(k,20){
 		vector<vector<float> > conv1outtemp(5,vector <float>(5)) ;
+		vector<vector<float> > conv1outtempmat(28,vector <float>(28)) ;
 		loop(i,5){
 			loop(j,5){
 				conv1outtemp[i][j]=conv1[i][j][k];
 			}
 		}
-		convolution_matrix(matrix,conv1outtemp,0);
+		loop(i,28){
+			loop(j,28){
+				conv1outtempmat[i][j]=matrix[i][j];
+			}
+		}
+		convolution_matrix(conv1outtempmat,conv1outtemp,0);
 		loop(i,24){
 			loop(j,24){
 				matrix[i][j]+=bias1[k];
 			}
 		}
 cout<<matrix.size();
-		//average_pool(matrix,2,2,2);
+		average_pool(matrix,2,2,2);
 		loop(i,12){
 			loop(j,12){
 				conv1out[i][j][k]=matrix[i][j];
