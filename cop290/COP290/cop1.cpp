@@ -105,7 +105,7 @@ void max_pool(vector<vector<float> > &matrix,int row, int col,int stride){
 	int stridei=0,stridej=0 ;
 	loop(i,vec.size()){
 		loop(j,vec[0].size()){
-			max=0.0 ;
+			max=matrix[0][0] ;
 			loop(ii,row){
 				loop(jj,col){
 					//cout<<matrix[stride*i+ii][stride*j+jj]<<"and"<<max<<" " ;
@@ -555,8 +555,8 @@ int main(int argc , char* argv[]){
 	if(!input.is_open()) {cout<<"Error in opening Input Matrix, check the address or filename" ; return 0;}
 	vector<vector<float> > matrixtemp1(28, vector<float>(28)) ;
 	int flag1=1 ;
-	loop(j,28){
-		loop(i,28){
+	loop(i,28){
+		loop(j,28){
 			if(input>>word) matrixtemp1[i][j] = (float) stod(word) ; 
 			else flag1=0 ; 	
 		}
@@ -569,8 +569,8 @@ int main(int argc , char* argv[]){
 	vector<vector<vector<float> > > matrixtemp2(5,vector<vector<float> >(5,vector <float>(20))) ;
 	int flag2=1 ;
 	loop(k,20){
-		loop(j,5){
-			loop(i,5){
+		loop(i,5){
+			loop(j,5){
 				if(input2>>word) matrixtemp2[i][j][k] = (float) stod(word) ; 
 				else flag2=0 ; 	
 			}
@@ -589,8 +589,8 @@ int main(int argc , char* argv[]){
 	vector<vector<vector<float> > > matrixtemp3(5,vector<vector<float> >(5,vector <float>(1000))) ;
 	int flag3=1 ;
 	loop(k,1000){
-		loop(j,5){
-			loop(i,5){
+		loop(i,5){
+			loop(j,5){
 				if(input3>>word) matrixtemp3[i][j][k] = (float) stod(word) ; 
 				else flag2=0 ; 	
 			}
@@ -608,8 +608,8 @@ int main(int argc , char* argv[]){
 	vector<vector<vector<float> > > matrixtemp4(4,vector<vector<float> >(4,vector <float>(25000))) ;
 	int flag4=1 ;
 	loop(k,25000){
-		loop(j,4){
-			loop(i,4){
+		loop(i,4){
+			loop(j,4){
 				if(input4>>word) matrixtemp4[i][j][k] = (float) stod(word) ; 
 				else flag2=0 ; 	
 			}
@@ -628,8 +628,8 @@ int main(int argc , char* argv[]){
 	vector<vector<vector<float> > > matrixtemp5(1,vector<vector<float> >(1,vector <float>(5000))) ;
 	int flag5=1 ;
 	loop(k,5000){
-		loop(j,1){
-			loop(i,1){
+		loop(i,1){
+			loop(j,1){
 				if(input5>>word) matrixtemp5[i][j][k] = (float) stod(word) ; 
 				else flag2=0 ; 	
 			}
@@ -648,7 +648,6 @@ int main(int argc , char* argv[]){
 	fc1=matrixtemp4;
 	fc2=matrixtemp5;
 	
-cout<<matrix.size();
 	//first convolution and pool
 	vector<vector<vector<float> > > conv1out(12,vector<vector<float> >(12,vector <float>(20))) ;
 	loop(k,20){
@@ -667,14 +666,15 @@ cout<<matrix.size();
 		convolution_matrix(conv1outtempmat,conv1outtemp,0);
 		loop(i,24){
 			loop(j,24){
-				matrix[i][j]+=bias1[k];
+				conv1outtempmat[i][j]+=bias1[k];
 			}
 		}
-cout<<matrix.size();
-		average_pool(matrix,2,2,2);
+print(conv1outtempmat);		
+max_pool(conv1outtempmat,2,2,2);
+		
 		loop(i,12){
 			loop(j,12){
-				conv1out[i][j][k]=matrix[i][j];
+				conv1out[i][j][k]=conv1outtempmat[i][j];
 			}
 		}
 	}
@@ -685,9 +685,9 @@ cout<<matrix.size();
 	vector<vector<vector<float> > > conv2out(4,vector<vector<float> >(4,vector <float>(50))) ;
 	loop(k,50){
 		vector<vector<float> > conv1outtempkernel(5,vector <float>(5)) ;
-		vector<vector<float> > conv1outtempmatrix(12,vector <float>(12)) ;
 		vector<vector<float> > conv1outfinmatrix(8,vector <float>(8,0)) ;
 		loop(m,20){
+			vector<vector<float> > conv1outtempmatrix(12,vector <float>(12)) ;
 			loop(i,5){
 				loop(j,5){
 					conv1outtempkernel[i][j]=conv2[i][j][k*20+m];
@@ -698,6 +698,7 @@ cout<<matrix.size();
 					conv1outtempmatrix[i][j]=conv1out[i][j][m];
 				}
 			}
+			//print(conv1outtempmatrix);
 			convolution_matrix(conv1outtempmatrix,conv1outtempkernel,0);
 			loop(i,8){
 				loop(j,8){
@@ -710,7 +711,8 @@ cout<<matrix.size();
 				conv1outfinmatrix[i][j]+=bias2[k];
 			}
 		}
-		average_pool(conv1outfinmatrix,2,2,2);
+		//print(conv1outfinmatrix);
+		max_pool(conv1outfinmatrix,2,2,2);
 		loop(i,4){
 			loop(j,4){
 				conv2out[i][j][k]=conv1outfinmatrix[i][j];
@@ -722,9 +724,10 @@ cout<<matrix.size();
 	vector<vector<vector<float> > > conv3out(1,vector<vector<float> >(1,vector <float>(500))) ;
 	loop(k,500){
 		vector<vector<float> > conv1outtempkernel(4,vector <float>(4)) ;
-		vector<vector<float> > conv1outtempmatrix(4,vector <float>(4)) ;
 		vector<vector<float> > conv1outfinmatrix(1,vector <float>(1,0)) ;
 		loop(m,50){
+			
+		vector<vector<float> > conv1outtempmatrix(4,vector <float>(4)) ;
 			loop(i,4){
 				loop(j,4){
 					conv1outtempkernel[i][j]=fc1[i][j][k*50+m];
@@ -759,9 +762,10 @@ cout<<matrix.size();
 	vector<vector<vector<float> > > conv4out(1,vector<vector<float> >(1,vector <float>(10))) ;
 	loop(k,10){
 		vector<vector<float> > conv1outtempkernel(1,vector <float>(1)) ;
-		vector<vector<float> > conv1outtempmatrix(1,vector <float>(1)) ;
 		vector<vector<float> > conv1outfinmatrix(1,vector <float>(1,0)) ;
 		loop(m,500){
+			
+		vector<vector<float> > conv1outtempmatrix(1,vector <float>(1)) ;
 			loop(i,1){
 				loop(j,1){
 					conv1outtempkernel[i][j]=fc1[i][j][k*500+m];
@@ -797,7 +801,7 @@ cout<<matrix.size();
 			maxi=i;
 		}
 	}
-	cout<<maxi;
+	cout<<max;
 return 0;
 }
 
