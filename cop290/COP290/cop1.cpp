@@ -1,4 +1,7 @@
 #include <bits/stdc++.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+using namespace cv;
 using namespace std;
 #define loop(i,a) for(int i=0;i<a;++i)
 
@@ -551,19 +554,22 @@ int main(int argc , char* argv[]){
 	string foo=argv[1] ;
 	transform(foo.begin(), foo.end(), foo.begin(), ::tolower);
 	
-	ifstream input(foo) ;
-	if(!input.is_open()) {cout<<"Error in opening Input Matrix, check the address or filename" ; return 0;}
 	vector<vector<float> > matrixtemp1(28, vector<float>(28)) ;
-	int flag1=1 ;
-	loop(i,28){
-		loop(j,28){
-			if(input>>word) matrixtemp1[i][j] = (float) stod(word) ; 
-			else flag1=0 ; 	
+	Mat img = imread(foo);
+	 if (img.empty()) 
+ 	{
+ 		cout << "Could not open or find the image" << endl;
+		cin.get(); //wait for any key press
+  		return -1;
+ 	}
+	loop(i,img.row){
+		loop(j,img.col){
+			img.at<uchar>(i,j) = 255-img.at<uchar>(i,j) ;
+			matrixtemp1[i][j] =((float)img.at<uchar>(i,j))/255.0;
 		}
-		if(flag1==0) break ;
 	}
-	if(flag1==0) {cout<<"Insufficient Input, i.e. numbers are less as per matrix size in the file, process terminated!" ; }
-	
+	print(matrixtemp1);
+
 	ifstream input2("conv1.txt") ;
 	if(!input2.is_open()) {cout<<"Error in opening Input Matrix, check the address or filename" ; return 0;}
 	vector<vector<vector<float> > > matrixtemp2(5,vector<vector<float> >(5,vector <float>(20))) ;
@@ -808,11 +814,18 @@ max_pool(conv1outtempmat,2,2,2);
 		}
 	}
 	softmax(prob);
-	float max=0.0;int maxi=0;
-	loop(i,10){
-		cout<<prob[i]<<'\n';
+	loop(j,5){
+		float max=0.0;float maxi=0;
+		loop(i,10){
+			if(max<prob[i]){
+				max=prob[i];
+				maxi=i;
+			}
+		}
+		cout<<j+1<<'.'<<'\t'<<maxi<<'\t'<<prob[maxi]<<'\n';
+		prob[maxi]=0.0;
 	}
-	cout<<max;
+	//cout<<max;
 return 0;
 }
 
