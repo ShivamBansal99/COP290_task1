@@ -30,7 +30,7 @@ void convolution(vector<vector<float> > &matrix, vector<vector<float> > &kernel,
 		loop(j,res_size){
 			loop(ii,k){
 				loop(jj,k){
-					temp+=test[i+ii][j+jj]*kernel[k-ii-1][k-jj-1] ;	
+					temp+=test[i+ii][j+jj]*kernel[ii][jj] ;	
 				}
 			}
 			res[i][j]=temp ; temp=0.0 ;
@@ -105,7 +105,7 @@ void max_pool(vector<vector<float> > &matrix,int row, int col,int stride){
 	int stridei=0,stridej=0 ;
 	loop(i,vec.size()){
 		loop(j,vec[0].size()){
-			max=matrix[0][0] ;
+			max=matrix[stride*i][stride*j] ;
 			loop(ii,row){
 				loop(jj,col){
 					//cout<<matrix[stride*i+ii][stride*j+jj]<<"and"<<max<<" " ;
@@ -658,20 +658,21 @@ int main(int argc , char* argv[]){
 				conv1outtemp[i][j]=conv1[i][j][k];
 			}
 		}
+		
 		loop(i,28){
 			loop(j,28){
 				conv1outtempmat[i][j]=matrix[i][j];
 			}
 		}
-		convolution_matrix(conv1outtempmat,conv1outtemp,0);
+		convolution(conv1outtempmat,conv1outtemp,0);
 		loop(i,24){
 			loop(j,24){
 				conv1outtempmat[i][j]+=bias1[k];
 			}
-		}
-print(conv1outtempmat);		
-max_pool(conv1outtempmat,2,2,2);
-		
+		}	
+	
+max_pool(conv1outtempmat,2,2,2);	
+//if(k==0) print(conv1outtempmat);
 		loop(i,12){
 			loop(j,12){
 				conv1out[i][j][k]=conv1outtempmat[i][j];
@@ -698,13 +699,16 @@ max_pool(conv1outtempmat,2,2,2);
 					conv1outtempmatrix[i][j]=conv1out[i][j][m];
 				}
 			}
-			//print(conv1outtempmatrix);
-			convolution_matrix(conv1outtempmatrix,conv1outtempkernel,0);
+			//if(k==1 && m==0) print(conv1outtempmatrix);
+			convolution(conv1outtempmatrix,conv1outtempkernel,0);
+			
 			loop(i,8){
 				loop(j,8){
 					conv1outfinmatrix[i][j]+=conv1outtempmatrix[i][j];
 				}
 			}
+			//if(k==1 && m==0) print(conv1outfinmatrix);
+		
 		}	
 		loop(i,8){
 			loop(j,8){
@@ -738,7 +742,7 @@ max_pool(conv1outtempmat,2,2,2);
 					conv1outtempmatrix[i][j]=conv2out[i][j][m];
 				}
 			}
-			convolution_matrix(conv1outtempmatrix,conv1outtempkernel,0);
+			convolution(conv1outtempmatrix,conv1outtempkernel,0);
 			loop(i,1){
 				loop(j,1){
 					conv1outfinmatrix[i][j]+=conv1outtempmatrix[i][j];
@@ -750,7 +754,9 @@ max_pool(conv1outtempmat,2,2,2);
 				conv1outfinmatrix[i][j]+=bias3[k];
 			}
 		}
+		
 		relu(conv1outfinmatrix);
+//print(conv1outfinmatrix);
 		loop(i,1){
 			loop(j,1){
 				conv3out[i][j][k]=conv1outfinmatrix[i][j];
@@ -768,15 +774,15 @@ max_pool(conv1outtempmat,2,2,2);
 		vector<vector<float> > conv1outtempmatrix(1,vector <float>(1)) ;
 			loop(i,1){
 				loop(j,1){
-					conv1outtempkernel[i][j]=fc1[i][j][k*500+m];
+					conv1outtempkernel[i][j]=fc2[i][j][k*500+m];
 				}
 			}
 			loop(i,1){
 				loop(j,1){
-					conv1outtempmatrix[i][j]=conv2out[i][j][m];
+					conv1outtempmatrix[i][j]=conv3out[i][j][m];
 				}
 			}
-			convolution_matrix(conv1outtempmatrix,conv1outtempkernel,0);
+			convolution(conv1outtempmatrix,conv1outtempkernel,0);
 			loop(i,1){
 				loop(j,1){
 					conv1outfinmatrix[i][j]+=conv1outtempmatrix[i][j];
@@ -788,18 +794,23 @@ max_pool(conv1outtempmat,2,2,2);
 				conv1outfinmatrix[i][j]+=bias4[k];
 			}
 		}
+		//print(conv1outfinmatrix);
 		loop(i,1){
 			loop(j,1){
 				conv4out[i][j][k]=conv1outfinmatrix[i][j];
 			}
 		}
 	}
+	vector<float> prob(10);
+	loop(i,10){
+		loop(j,10){
+			prob[i]=conv4out[0][0][i];
+		}
+	}
+	softmax(prob);
 	float max=0.0;int maxi=0;
 	loop(i,10){
-		if(max<conv4out[0][0][i]){
-			max=conv4out[0][0][i];
-			maxi=i;
-		}
+		cout<<prob[i]<<'\n';
 	}
 	cout<<max;
 return 0;
